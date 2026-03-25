@@ -1,2 +1,2 @@
-# C-Users-ShaiwalSingh-Music-Flutter-automation
+ShaiwalSingh-Music-Flutter-automation
 This is for mobile flutter automation
