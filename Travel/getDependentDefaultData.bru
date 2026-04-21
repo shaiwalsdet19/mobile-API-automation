@@ -1,0 +1,51 @@
+meta {
+  name: getDependentDefaultData
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/getDependentDefaultData
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"id":"a68809eec70694","data":{"a68809eec70694":{"dependent_first_name":"Testing first","dependent_middle_name":"middle","dependent_last_name":"test last","dependent_relation_type":"Father","dependent_dob":"06-04-1970","dependent_mental_illness":"No","dependent_aadhar_card":"123412341234"}},"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

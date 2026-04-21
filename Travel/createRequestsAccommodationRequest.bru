@@ -1,0 +1,163 @@
+meta {
+  name: createRequestsAccommodationRequest
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/createRequests
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "user_id": "{{user_id}}",
+      "form_id": "",
+      "AccommodationRequest": {
+          "type": "a665f4861ac521",
+          "city": "5ed72625b67b3",
+          "cityModel": {
+              "value": "Hyderabad, Telangana, India",
+              "id": "5ed72625b67b3"
+          },
+          "cost_center": "",
+          "reviewer": {},
+          "formId": "",
+          "from_date": "24-07-2025",
+          "hasError": false,
+          "is_billable": "0",
+          "domestic_international": "1",
+          "is_integration_request": "",
+          "project_code": "",
+          "submission_form_id": "",
+          "tentative_cost": "50",
+          "tentative_cost_currency": "RUPEE",
+          "to_date": "30-07-2025",
+          "travelerVOS": [
+              {
+                  "counter": 1,
+                  "guestList": [],
+                  "isChecked": true,
+                  "name": "Ravi2 Adam2",
+                  "travelerCustomFieldVOS": [
+                      {
+                          "id": "fullname",
+                          "isFixed": false,
+                          "label": "Full Name",
+                          "order": 0,
+                          "value": "Ravi2 Adam2"
+                      },
+                      {
+                          "id": "office_mobile",
+                          "isFixed": false,
+                          "label": "Office Mobile No",
+                          "order": 1,
+                          "value": "N.A."
+                      },
+                      {
+                          "id": "date_of_birth",
+                          "isFixed": false,
+                          "label": "Date Of Birth",
+                          "order": 2,
+                          "type": "date",
+                          "value": "01.11.2004"
+                      },
+                      {
+                          "id": "nationality",
+                          "isFixed": false,
+                          "label": "Nationality",
+                          "order": 3,
+                          "value": "N.A."
+                      },
+                      {
+                          "id": "marital_status",
+                          "isFixed": false,
+                          "label": "Marital Status",
+                          "order": 4,
+                          "value": "N.A."
+                      },
+                      {
+                          "id": "adhar_card_number",
+                          "isFixed": false,
+                          "label": "Aadhaar",
+                          "order": 5,
+                          "value": "N.A."
+                      },
+                      {
+                          "id": "bank_pan_num",
+                          "isFixed": false,
+                          "label": "PAN",
+                          "order": 6,
+                          "value": "N.A."
+                      }
+                  ],
+                  "travelerType": "Self",
+                  "userId": "37528"
+              }
+          ],
+          "trip_id": "a685e2d767fe16",
+          "user_id": "37528",
+          "travellers_list": [
+              {
+                  "fullname": "Ravi2 Adam2",
+                  "office_mobile": "N.A.",
+                  "date_of_birth": "01.11.2004",
+                  "nationality": "N.A.",
+                  "marital_status": "N.A.",
+                  "adhar_card_number": "N.A.",
+                  "bank_pan_num": "N.A.",
+                  "user_id": "37528",
+                  "select_check": "1",
+                  "is_self": "1",
+                  "is_colleague": "1"
+              }
+          ],
+          "dependents_list": []
+      },
+      "reviewer": {},
+      "preferences": {
+          "frequent_travel_type": "",
+          "frequent_travel_class": "",
+          "frequent_acc_type": "",
+          "update_preference_user_mongo": ""
+      },
+      "token": "{{token}}"
+  }
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

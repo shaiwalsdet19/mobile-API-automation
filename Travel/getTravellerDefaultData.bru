@@ -1,0 +1,51 @@
+meta {
+  name: getTravellerDefaultData
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/getTravellerDefaultData
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"uid":"37527","default_attributes":["date_of_birth","nationality","marital_status","office_mobile","adhar_card_number","bank_pan_num","fullname"],"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
