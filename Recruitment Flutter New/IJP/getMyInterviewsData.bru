@@ -1,0 +1,127 @@
+meta {
+  name: getMyInterviewsData
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getMyInterviewsData
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "500",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  
+  const schema = {
+    "type": "object",
+    "required": ["status", "message", "interviews_data"],
+    "properties": {
+      "status": { "type": "number", "enum": [1] },   // must be 1
+      "message": { "type": "string", "enum":["Successfully loaded all Interviews Data"] },
+      "interviews_data": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id", "phase_id", "job_id", "task_id",
+            "candidate_name", "candidate_email", "candidate_phone_number",
+            "candidate_interview_date", "candidate_interview_from_to_time",
+            "candidate_interview_from", "candidate_interview_to",
+            "from_date_timezone", "to_date_timezone",
+            "candidate_interview_stage", "resume", "job_titile", "meeting_link",
+            "timezone", "is_candidate_rated", "location", "company",
+            "business_unit", "department", "designation", "feedback_attachments",
+            "show_submit_buttons", "show_save_as_draft"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "phase_id": { "type": "string" },
+            "job_id": { "type": "string" },
+            "task_id": { "type": "string" },
+            "candidate_name": { "type": "string" },
+            "candidate_email": { "type": "string" },
+            "candidate_phone_number": { "type": "string" },
+            "candidate_interview_date": { "type": "string" },
+            "candidate_interview_from_to_time": { "type": "string" },
+            "candidate_interview_from": { "type": "number" },
+            "candidate_interview_to": { "type": "number" },
+            "from_date_timezone": {
+              "type": "object",
+              "required": ["date", "time", "epoch"],
+              "properties": {
+                "date": { "type": "string" },
+                "time": { "type": "string" },
+                "epoch": { "type": "number" }
+              }
+            },
+            "to_date_timezone": {
+              "type": "object",
+              "required": ["date", "time", "epoch"],
+              "properties": {
+                "date": { "type": "string" },
+                "time": { "type": "string" },
+                "epoch": { "type": "number" }
+              }
+            },
+            "candidate_interview_stage": { "type": "string" },
+            "resume": { "type": "string" },
+            "job_titile": { "type": "string" },
+            "meeting_link": { "type": "string" },
+            "timezone": { "type": "string" },
+            "is_candidate_rated": { "type": "boolean" },
+            "location": { "type": "string" },
+            "company": { "type": "string" },
+            "business_unit": { "type": "string" },
+            "department": { "type": "string" },
+            "designation": { "type": "string" },
+            "feedback_attachments": { "type": "string" },
+            "show_submit_buttons": { "type": "boolean" },
+            "show_save_as_draft": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  };
+  
+  test("Schema is valid for interviews_data response", function () {
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

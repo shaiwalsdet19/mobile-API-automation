@@ -1,0 +1,51 @@
+meta {
+  name: Mobileapi/raiseCustomFlowRequest
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/raiseCustomFlowRequest
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"NewFormCriticality":"","NewFormInput":{"f1":{"answer":"600","comment":null,"label":"Employee ID","fieldType":"textfield","validations":null,"regex":null,"section":"job_details","mandatory":false,"type":"system-attributes","fieldName":"employee_id","isEditable":false,"updateInProfile":false,"is_separation_field":false,"defaultValue":null,"isCustom":false,"hidden":false},"f2":{"answer":"","comment":null,"label":"Employee Name","fieldType":"textfield","validations":null,"regex":null,"section":"biographical","mandatory":false,"type":"system-attributes","fieldName":"legal_name","isEditable":false,"updateInProfile":false,"is_separation_field":false,"defaultValue":null,"isCustom":false,"hidden":false},"f3":{"answer":"","comment":null,"label":"Department","fieldType":"textfield","validations":null,"regex":null,"section":"job_details","mandatory":false,"type":"system-attributes","fieldName":"designation_alias","isEditable":false,"updateInProfile":false,"is_separation_field":false,"defaultValue":null,"isCustom":false,"hidden":false},"f4":{"answer":"Mouse","comment":null,"type":"custom-dropdown","hidden":false},"f5":{"answer":"Api testing ","comment":null,"type":"text-box","defaultValue":null,"hidden":false},"f6":{"answer":null,"comment":null,"type":"text-box","defaultValue":null,"hidden":false},"allSmartTags":{"answer":[],"hidden":true,"type":"smart_tags"}},"NewFormInputValid":"true","NewFormSkipStep":"\"\"","has_form":"1","is_trail":true,"custom_flow":"a672f2a8e57f95","token":"{{token}}","user_id":"{{user_id}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "600",
+          "password": "Dbox@1"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

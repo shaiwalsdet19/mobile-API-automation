@@ -1,0 +1,51 @@
+meta {
+  name: submitAttendance
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{apiURL}}/attendance/attendanceMobileApi/submitAttendance
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"attestation_details":{"is_mandatory":"0","attestation_flag":false},"break_duration":"00:00:00","clockInTime":1750991400,"clockOutTime":1751008500,"clock_in_date":"27-06-2025","NewFormInputValid":"","location":"1","message":"fhfj","is_next_day":false,"is_overnight_outduty":false,"is_overnight_shortleave":false,"multiple_days_planned_ot":[],"edit_reason_id":"a6346c00241797","request_type":"1","requested_shift":"","requested_shift_date":"27-06-2025","requested_shift_date_to":"27-06-2025","requested_weeklyoff":"","requested_weeklyoff_date":"27-06-2025","revoke_if_date_already_has_plannedOT":0,"shift_swap_date":"27-06-2025","shift_swap_user_id":"","clock_in_date_to":"27-06-2025","user_id":"{{user_id}}","NewFormInput":{},"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Status code is 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,52 @@
+meta {
+  name: ReimbursementSubmit
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/ReimbursementSubmit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"status":0,"claim_id":"a685d23859b7d6","claim_title":"Good","linked_to_travel":0,"trip_id":"","expenses":[{"id":"a685d2382ece8c"}],"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Status code is 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

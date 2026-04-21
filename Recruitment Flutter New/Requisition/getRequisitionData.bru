@@ -1,0 +1,148 @@
+meta {
+  name: getRequisitionData
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getRequisitionData
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"tab":2,"start":0,"length":20,"filter":1,"order_column":"updated_on","order_dir":"desc","filter_requisition_position":[1],"project_ids":[],"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema validation for Requisition List Response", function () {
+      const schema = {
+          type: "object",
+          required: ["active_count", "closed_count", "status", "data"],
+          properties: {
+              active_count: { type: "integer" },
+              closed_count: { type: "integer" },
+              status: { type: "integer", enum: [0, 1] },
+              data: {
+                  type: "array",
+                  items: {
+                      type: "object",
+                      required: [
+                          "id",
+                          "req_id",
+                          "designation_id",
+                          "designation",
+                          "project_id",
+                          "project",
+                          "can_act",
+                          "task_id",
+                          "department",
+                          "status",
+                          "initiated_on_timestamp",
+                          "initiated_on_string",
+                          "initiated_on_timezone",
+                          "updated_on_timestamp",
+                          "updated_on_string",
+                          "updated_on_timezone",
+                          "archived_on_timestamp",
+                          "archived_on_string",
+                          "archived_on_timezone",
+                          "new_positions",
+                          "replacement_positions",
+                          "total_positions"
+                      ],
+                      properties: {
+                          id: { type: "string" },
+                          req_id: { type: "string" },
+                          designation_id: { type: "string" },
+                          designation: { type: "string" },
+                          project_id: { type: "string" },
+                          project: { type: ["string", "null"] },
+                          can_act: { type: "boolean" },
+                          task_id: { type: ["string", "null"] },
+                          department: { type: "string" },
+                          status: { type: "integer" },
+                          initiated_on_timestamp: { type: "integer" },
+                          initiated_on_string: { type: "string" },
+                          initiated_on_timezone: {
+                              type: "object",
+                              required: ["date", "time", "epoch"],
+                              properties: {
+                                  date: { type: "string" },
+                                  time: { type: "string" },
+                                  epoch: { type: "integer" }
+                              }
+                          },
+                          updated_on_timestamp: { type: "integer" },
+                          updated_on_string: { type: "string" },
+                          updated_on_timezone: {
+                              type: "object",
+                              required: ["date", "time", "epoch"],
+                              properties: {
+                                  date: { type: "string" },
+                                  time: { type: "string" },
+                                  epoch: { type: "integer" }
+                              }
+                          },
+                          archived_on_timestamp: { type: ["integer", "string"] },
+                          archived_on_string: { type: "string" },
+                          archived_on_timezone: {
+                              oneOf: [
+                                  {
+                                      type: "object",
+                                      required: ["date", "time", "epoch"],
+                                      properties: {
+                                          date: { type: "string" },
+                                          time: { type: "string" },
+                                          epoch: { type: "integer" }
+                                      }
+                                  },
+                                  { type: "array" } // sometimes empty array
+                              ]
+                          },
+                          new_positions: { type: "integer" },
+                          replacement_positions: { type: "integer" },
+                          total_positions: { type: "integer" }
+                      }
+                  }
+              }
+          }
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

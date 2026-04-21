@@ -1,0 +1,51 @@
+meta {
+  name: saveProfileFields
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/saveProfileFields
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"profile_user_id":"{{user_id}}","save_details":{"section_heading_id":"certification_details","multi_field_index":"new","attributes":{"certificate_name":"","certificate_number":"","certificate_description":"","certificate_issue_date":"","certification_completion_date":"","certification_expiry_date":"","a65ce4443b2b83":"123","a67ffb8ddc6300":"","institute_id":"","university_id":""}},"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "600",
+          "password": "Dbox@1"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

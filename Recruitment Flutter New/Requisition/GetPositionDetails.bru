@@ -1,0 +1,164 @@
+meta {
+  name: GetPositionDetails
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/GetPositionDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"hiring_manager":"","designation_id":"a6424773077b2f","project_id":"","rest_location":"","functional_area":"","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema Validation", function () {
+  //     pm.response.to.have.jsonSchema({
+          type: "object",
+          required: ["status", "message", "data"],
+          properties: {
+              status: { type: "integer" },
+              message: { type: "string",enum:["Successfully loaded data"] },
+              data: {
+                  type: "object",
+                  required: ["is_position_based"],
+                  properties: {
+                      // Boolean flags
+                      separate_req_new_replacement: { type: "boolean" },
+                      show_reporting_manager: { type: "boolean" },
+                      mandatory_reporting_manager: { type: "boolean" },
+                      show_HRBP: { type: "boolean" },
+                      show_dotted_line_manager: { type: "boolean" },
+                      mandatory_HRBP: { type: "boolean" },
+                      mandatory_dotted_line_manager: { type: "boolean" },
+                      show_desig_alias: { type: "boolean" },
+                      mandatory_desig_alias: { type: "boolean" },
+                      show_desig_title: { type: "boolean" },
+                      mandatory_desig_title: { type: "boolean" },
+                      show_job_level: { type: "boolean" },
+                      mandatory_job_level: { type: "boolean" },
+                      show_location: { type: "boolean" },
+                      mandatory_location: { type: "boolean" },
+                      show_emp_type: { type: "boolean" },
+                      mandatory_emp_type: { type: "boolean" },
+                      show_emp_sub_type: { type: "boolean" },
+                      mandatory_emp_sub_type: { type: "boolean" },
+                      show_assignment_one: { type: "boolean" },
+                      mandatory_assignment_one: { type: "boolean" },
+                      show_assignment_two: { type: "boolean" },
+                      mandatory_assignment_two: { type: "boolean" },
+                      show_assignment_three: { type: "boolean" },
+                      mandatory_assignment_three: { type: "boolean" },
+                      show_standard_role1: { type: "boolean" },
+                      mandatory_standard_role1: { type: "boolean" },
+                      show_standard_role2: { type: "boolean" },
+                      mandatory_standard_role2: { type: "boolean" },
+                      show_standard_role3: { type: "boolean" },
+                      mandatory_standard_role3: { type: "boolean" },
+                      show_contribution_level: { type: "boolean" },
+                      mandatory_contribution_level: { type: "boolean" },
+                      override_functional_area: { type: "boolean" },
+                      override_location: { type: "boolean" },
+                      override_reporting_manager: { type: "boolean" },
+                      override_HRBP: { type: "boolean" },
+                      override_dotted_line_manager: { type: "boolean" },
+                      override_standard_role1: { type: "boolean" },
+                      override_standard_role2: { type: "boolean" },
+                      override_standard_role3: { type: "boolean" },
+                      override_assignment_one: { type: "boolean" },
+                      override_assignment_two: { type: "boolean" },
+                      override_assignment_three: { type: "boolean" },
+                      override_contribution_level: { type: "boolean" },
+                      override_emp_type: { type: "boolean" },
+                      override_emp_sub_type: { type: "boolean" },
+                      override_job_level: { type: "boolean" },
+                      override_desig_alias: { type: "boolean" },
+                      override_desig_title: { type: "boolean" },
+                      show_functional_area: { type: "boolean" },
+                      mandatory_functional_area: { type: "boolean" },
+  
+                      // Strings
+                      default_functional_area: { type: "string" },
+                      default_location: { type: "string" },
+  
+                      // Arrays
+                      functional_area_arr: { type: "array" },
+                      designation_titles_arr: { type: "array" },
+                      position_data: { type: "array" },
+                      position_ids_arr: { type: "array" },
+  
+                      // Objects with dynamic keys
+                      assignment_one_arr: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                      },
+                      assignment_two_arr: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                      },
+                      assignment_three_arr: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                      },
+                      contribution_level_arr: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                      },
+                      job_levels_arr: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                      },
+                      location_arr: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                      },
+                      employee_typ_arr: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                      },
+  
+                      // Final flag
+                      is_position_based: { type: "boolean" }
+                  }
+              }
+          }
+      });
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

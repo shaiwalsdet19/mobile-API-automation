@@ -1,0 +1,101 @@
+meta {
+  name: getJobFields
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getJobFields
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"id":"a64240c3ed2000","type":"ijp","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "500",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  const schema = {
+    "type": "object",
+    "required": ["status", "message", "data"],
+    "properties": {
+      "status": { "type": "number" },
+      "message": { "type": "string", "enum":["Successfully loaded all the job fields"] },
+      "data": {
+        "type": "object",
+        "required": ["is_parser_enable", "job_fields"],
+        "properties": {
+          "is_parser_enable": { "type": "boolean" },
+          "job_fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["fields", "label", "order", "type", "id"],
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["order", "label", "validation", "type", "id"],
+                    "properties": {
+                      // Order can be string OR number
+                      "order": { "type": ["number", "string"] },
+                      "label": { "type": "string" },
+                      "type": { "type": "string" },
+                      "id": { "type": ["string", "number"] },
+                      "validation": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                },
+                "label": { "type": "string" },
+                "order": { "type": ["number", "string"] },
+                "type": { "type": "string" },
+                "id": { "type": ["string", "number"] }
+              }
+            }
+          }
+        }
+      }
+    }
+  };
+  
+  test("Schema is valid", function () {
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

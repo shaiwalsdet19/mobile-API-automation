@@ -1,0 +1,51 @@
+meta {
+  name: saveGuestDetails
+  type: http
+  seq: 25
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/saveGuestDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"fullname":"21-Jul-2025","office_mobile":"12345","date_of_birth":"09-Jul-2025","nationality":"dhdh","marital_status":"sjdhdj","adhar_card_number":"shdhhd","bank_pan_num":"djjd","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

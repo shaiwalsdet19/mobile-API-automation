@@ -1,0 +1,68 @@
+meta {
+  name: ms/vibeapi/group/creategroup
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{apiURL}}/ms/vibeapi/group/creategroup
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "banner_id": "grp_img_1",
+      "description": "kjfskhiushf",
+      "id": "",
+      "name": "{{currentTimestamp}}",
+      "privacy": "private",
+      "shareEvent": true,
+      "allow_kb_articles": true,
+      "sharePoll": true,
+      "sharePost": true,
+      "type": "work",
+      "token": "{{token}}"
+  }
+   
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "V18",
+          "password": "Mobile@123"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+  const timestamp = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 15); // "20250627_183456"
+  bru.setVar("currentTimestamp", timestamp);
+  
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

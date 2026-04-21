@@ -1,0 +1,51 @@
+meta {
+  name: raiseCustomFlowRequest
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/raiseCustomFlowRequest
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"isNewForm":true,"NewFormInput":{"allSmartTags":{"answer":[],"hidden":true,"type":"smart_tags"},"f1":{"answer":"TestAPI mobile","comment":null,"defaultValue":null,"hidden":false,"type":"text-box"},"f2":{"answer":123,"comment":null,"defaultValue":null,"hidden":false,"type":"numeric"},"f3":{"answer":null,"comment":null,"deviceDetails":{"browser":"Chrome","platform":"Linux aarch64","userAgent":"Mozilla\/5.0 (Linux; Android 13; LAVA LZX409 Build\/TP1A.220624.014; wv) AppleWebKit\/537.36 (KHTML, like Gecko) Version\/4.0 Chrome\/137.0.7151.90 Mobile Safari\/537.36","version":"4.0"},"hidden":false,"ipAddress":"183.82.55.162","isSignDeclaration":null,"signedBy":"{{user_id}}","timeStamp":"2025-06-26T09:49:26.768Z","type":"signature","zone":"Asia\/Calcutta"}},"NewFormCriticality":"","NewFormInputValid":"true","NewFormSkipStep":"\"\"","user_id":"{{user_id}}","custom_flow":"a63f74d66ccd9d","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "600",
+          "password": "Dbox@1"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
