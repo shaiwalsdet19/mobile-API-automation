@@ -1,0 +1,51 @@
+meta {
+  name: AttendanceRequestLocation
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/AttendanceRequestLocation
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"request_shift_days_allowed":0,"out_duty_future":-1,"shift_change_future":-1,"shift_swap_future":-1,"short_leave_future":-1,"clock_in_allowed":1,"od_allowed":0,"dont_show_out_duty":0,"allow_planned_ot":0,"shift_change":0,"short_leave_allowed":0,"allow_request_single_day":0,"allow_past":11134,"out_duty_past":"0","shift_plus_attendance_past":0,"shift_swap_past":0,"short_leave_past":"0","weeklyoff_change_past":0,"shift_plus_attendance_allowed":0,"weeklyoff_change_allowed":0,"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

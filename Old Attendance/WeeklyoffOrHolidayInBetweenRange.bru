@@ -1,0 +1,51 @@
+meta {
+  name: WeeklyoffOrHolidayInBetweenRange
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/WeeklyoffOrHolidayInBetweenRange
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"from_date":"26-06-2025","to_date":"26-06-2025","mongo_id":"a6375c98d70ceb","show_weekly_or_holiday_info_attendance_request":1,"show_weekly_or_holiday_info_outduty_request":1,"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,51 @@
+meta {
+  name: AttendanceRequestApply
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/AttendanceRequestApply
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"break_duration":"00:00:00","clockInTime":"08:00:00","clockOutTime":"12:45:00","allow_attrequest_holiday":1,"allow_attrequest_weekoff":1,"location":1,"message":"dxcfvg","mongo_id":"a6375c98d70ceb","overnightClock":0,"overnight_outduty":0,"overnight_shortleave":0,"purpose":"","edit_reason_id":"a6346c00241797","request_type":2,"revoke_existing_request":0,"shiftDate":"02-07-2025","shiftDateTo":"02-07-2025","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
