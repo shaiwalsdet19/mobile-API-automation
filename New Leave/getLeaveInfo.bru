@@ -1,0 +1,69 @@
+meta {
+  name: getLeaveInfo
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{apiURL}}/leaves/leavesMobileApi/getLeaveInfo
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"from_date":"{{from_date}}","FromTo":"to","hourly_leave_from":"00:00","hourly_leave_to":"00:00","is_first_day_secondhalf":false,"is_firsthalf_secondhalf":0,"is_half_day":false,"is_hourly":false,"is_hourly_midnight":false,"is_last_day_firsthalf":false,"leave_type":"a68638a9b66095","sub_category":"","to_date":"{{to_date}}","user_id":"{{user_id}}","dont_convert":1,"token":"{{token}}"}
+  
+}
+
+script:pre-request {
+  // Get current date
+  let today = new Date();
+  
+  // Format to DD-MM-YYYY
+  function formatDateToDDMMYYYY(date) {
+      let dd = String(date.getDate()).padStart(2, '0');
+      let mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+      let yyyy = date.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+  }
+  
+  // Set from_date and to_date to today's date
+  let formattedDate = formatDateToDDMMYYYY(today);
+  bru.setEnvVar("from_date", formattedDate);
+  bru.setEnvVar("to_date", formattedDate);
+  
+  // login to fetch data
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Status code is 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

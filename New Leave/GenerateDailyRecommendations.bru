@@ -1,0 +1,68 @@
+meta {
+  name: GenerateDailyRecommendations
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{apiURL}}/MobileRecommendationsApi/GenerateDailyRecommendations
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"cycle_end":"{{cycle_end}}","cycle_start":"{{cycle_start}}}}","module_id":"1","token":"{{token}}"}
+}
+
+script:pre-request {
+  // Get today's date
+  let now = new Date();
+  
+  // Get first and last day of last month
+  let firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  let lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  
+  // Format date to YYYY-MM-DD
+  function formatDate(date) {
+      return date.toISOString().split('T')[0];
+  }
+  
+  // Set cycle_start and cycle_end
+  bru.setEnvVar("cycle_start", formatDate(firstDayLastMonth));
+  bru.setEnvVar("cycle_end", formatDate(lastDayLastMonth));
+  
+  //call the login API to fetch token
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Status code is 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
