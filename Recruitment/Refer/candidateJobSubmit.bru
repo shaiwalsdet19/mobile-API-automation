@@ -1,0 +1,51 @@
+meta {
+  name: candidateJobSubmit
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/candidateJobSubmit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"data":{"resume_details":{},"biographical":{"firstname":"hello","lastname":"testing api"},"work_experience":{"has_prev_work_exp":false,"0":{}},"contact":{"additional_email_onb":"testapi@gmail.com","phone_country_code":{"label":"+91 India","value":"+91"},"phone":"1234567890"},"misc":{},"array_section_one":{"0":{}}},"type":"refer","job_id":"a64240c3ed2000","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
