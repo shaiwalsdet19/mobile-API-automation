@@ -1,0 +1,51 @@
+meta {
+  name: Mobileapi/customFlowApplicationForm
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/customFlowApplicationForm
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"is_subflow":false,"phase_id":"","request_id":"","task_id":"","flow_id":"a672f2a8e57f95","user_id":"{{user_id}}","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "600",
+          "password": "Dbox@1"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
