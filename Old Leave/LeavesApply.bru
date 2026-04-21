@@ -1,0 +1,74 @@
+meta {
+  name: LeavesApply
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/LeavesApply
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"across_midnight":0,"ccIDs":[],"recipientsIDs":"","form_id":"","from":"{{from_date}}","is_first_day_secondhalf":0,"is_firsthalf_secondhalf":"2","other":0,"halfDay":1,"hourly":0,"is_last_day_firsthalf":0,"leaveType":"a67344c0cb994c","unpaid_leave_reason":"a631c6d9006296","Message":"testing old API automation","to":"{{to_date}}","user_leave_form":{},"token":"{{token}}"}
+  
+  
+}
+
+script:pre-request {
+  // to get current year
+  let currentYear = new Date().getFullYear();
+  bru.setEnvVar("current_year", currentYear);
+  
+  // Get current date
+  let today = new Date();
+  
+  // Format to DD-MM-YYYY
+  function formatDateToDDMMYYYY(date) {
+      let dd = String(date.getDate()).padStart(2, '0');
+      let mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+      let yyyy = date.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+  }
+  
+  // Set from_date and to_date to today's date
+  let formattedDate = formatDateToDDMMYYYY(today);
+  bru.setEnvVar("from_date", formattedDate);
+  bru.setEnvVar("to_date", formattedDate);
+  
+  // call the login to fetch token
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}

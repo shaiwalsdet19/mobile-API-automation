@@ -1,0 +1,73 @@
+meta {
+  name: calculateduration
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/calculateduration
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"across_midnight":0,"from":"{{from_date}}","FromTo":"from","file_attached":"0","is_first_day_secondhalf":0,"halfDay":0,"is_last_day_firsthalf":0,"leaveType":"a68638a9b66095","to":"{{to_date}}","user_id":"{{user_id}}","token":"{{token}}"}
+  
+}
+
+script:pre-request {
+  // to get current year
+  let currentYear = new Date().getFullYear();
+  bru.setEnvVar("current_year", currentYear);
+  
+  // Get current date
+  let today = new Date();
+  
+  // Format to DD-MM-YYYY
+  function formatDateToDDMMYYYY(date) {
+      let dd = String(date.getDate()).padStart(2, '0');
+      let mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+      let yyyy = date.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+  }
+  
+  // Set from_date and to_date to today's date
+  let formattedDate = formatDateToDDMMYYYY(today);
+  bru.setEnvVar("from_date", formattedDate);
+  bru.setEnvVar("to_date", formattedDate);
+  
+  // call the login to fetch token
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
