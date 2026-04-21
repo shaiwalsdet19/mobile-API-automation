@@ -1,0 +1,52 @@
+meta {
+  name: CreateExpenseItem
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/CreateExpenseItem
+  body: json
+  auth: inherit
+}
+
+body:json {
+    {"title":"Good","date":"26-06-2025","currency":"RUPEE","expense":[{"serverId":"amount","value":"100000"},{"serverId":"unit","value":"1"},{"serverId":"pre_cal_val","value":"100000.0"}],"fields":[{"serverId":"itemName","value":"zsxcvb"},{"serverId":"merchant","value":""},{"serverId":"merchant_id","value":""},{"serverId":"invoice_number","value":"xcv"}],"type":"a62c40ea8ba9fd","attachment_compulsory":0,"upper_cap_unit":"1","auto_cal":"0","prediction":"","expense_id":"","merchant":"","merchant_id":"","invoice_number":"xcv","expense_wallet":false,"conversion_factor":"1","conversion_currency":"INR","distance_travelled":"","linked_to_travel":0,"attachment":[],"category_name":"","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Status code is 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}
