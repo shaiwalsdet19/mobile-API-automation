@@ -1,0 +1,119 @@
+meta {
+  name: GetRequisitionJobDetails
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/GetRequisitionJobDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"hiring_manager":"","designation_id":"a6424773077b2f","rest_location":"","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema Validation", function () {
+  //     pm.response.to.have.jsonSchema({
+          type: "object",
+          required: ["status", "message", "data"],
+          properties: {
+              status: { type: "integer" },
+              message: { type: "string",enum:["successfully loaded data"] },
+              data: {
+                  type: "object",
+                  required: [
+                      "show_exp_range",
+                      "mandatory_exp_range",
+                      "show_salary_range",
+                      "mandatory_salary_range",
+                      "show_rec_start_date",
+                      "mandatory_rec_start_date",
+                      "show_hiring_lead",
+                      "mandatory_hiring_lead",
+                      "show_requested_job_tat",
+                      "mandatory_requested_job_tat",
+                      "max_allowed_positions",
+                      "currency_array",
+                      "show_job_target_tat",
+                      "hiring_leads",
+                      "job_description",
+                      "default_exp_from",
+                      "default_exp_to",
+                      "default_exp_years_months",
+                      "default_salary_min",
+                      "default_salary_max",
+                      "default_currency",
+                      "default_salary_timeframe"
+                  ],
+                  properties: {
+                      show_exp_range: { type: "boolean" },
+                      mandatory_exp_range: { type: "boolean" },
+                      show_salary_range: { type: "boolean" },
+                      mandatory_salary_range: { type: "boolean" },
+                      show_rec_start_date: { type: "boolean" },
+                      mandatory_rec_start_date: { type: "boolean" },
+                      show_hiring_lead: { type: "boolean" },
+                      mandatory_hiring_lead: { type: "boolean" },
+                      show_requested_job_tat: { type: "boolean" },
+                      mandatory_requested_job_tat: { type: "boolean" },
+                      max_allowed_positions: { type: "integer" },
+                      currency_array: {
+                          type: "object",
+                          additionalProperties: { type: "string" } // All currency codes allowed dynamically
+                      },
+                      show_job_target_tat: { type: "boolean" },
+                      hiring_leads: {
+                          type: "object",
+                          additionalProperties: { type: "string" } // Dynamic user IDs
+                      },
+                      job_description: { type: "string" },
+                      default_exp_from: { type: "string" },
+                      default_exp_to: { type: "string" },
+                      default_exp_years_months: { type: "string" },
+                      default_salary_min: { type: "string" },
+                      default_salary_max: { type: "string" },
+                      default_currency: { type: "string" },
+                      default_salary_timeframe: { type: "string" }
+                  }
+              }
+          }
+      });
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

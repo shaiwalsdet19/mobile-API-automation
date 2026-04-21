@@ -1,0 +1,123 @@
+meta {
+  name: getRecruitmentPostedJobs
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getRecruitmentPostedJobs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"type":"ijp","length":20,"start":0,"company":"","business_unit":[],"department_id":[],"location":[],"employee_type":"","from_date":"","text":"","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "500",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema is valid", () => {
+      const schema = {
+          "type": "object",
+          "required": ["status", "message", "jobs", "total_jobs_count"],
+          "properties": {
+              "status": { "type": "integer" },
+              "message": { "type": "string","enum": ["Successfully loaded all posted Jobs"] },
+              "total_jobs_count": { "type": "integer" },
+              "jobs": {
+                  "type": "array",
+                  "items": {
+                      "type": "object",
+                      "required": ["job_id", "job_code", "role", "location", "employee_type", "employee_sub_type", "exp_min_range", "exp_max_range", "created_on", "created_on_timezone"],
+                      "properties": {
+                          "job_id": { "type": "string" },
+                          "job_code": { "type": "string" },
+                          "role": { "type": "string" },
+                          "location": { "type": "string" },
+                          "employee_type": { "type": "string" },
+                          "employee_sub_type": { "type": "string" },
+                          "exp_min_range": { "type": "integer" },
+                          "exp_max_range": { "type": "integer" },
+                          "created_on": { "type": "string" },
+                          "created_on_timezone": {
+                              "type": "object",
+                              "required": ["date", "time", "epoch"],
+                              "properties": {
+                                  "date": { "type": "string" },
+                                  "time": { "type": "string" },
+                                  "epoch": { "type": "integer" }
+                              }
+                          },
+                          "department": {
+                              "oneOf": [
+                                  {
+                                      "type": "array",
+                                      "maxItems": 0
+                                  },
+                                  {
+                                      "type": "object",
+                                      "properties": {
+                                          "department_name": { "type": "string" },
+                                          "department_code": { "type": "string" },
+                                          "cost_center_id": { "type": "string" },
+                                          "business_unit_id": { "type": "string" },
+                                          "business_unit": { "type": "string" },
+                                          "business_unit_code": { "type": "string" },
+                                          "division_cost_center": { "type": "string" },
+                                          "division_cost_center_code": { "type": "string" },
+                                          "division_cost_center_name": { "type": "string" },
+                                          "division_code": { "type": "string" },
+                                          "division": { "type": "string" },
+                                          "division_cost_center_id": { "type": "string" },
+                                          "cost_center": { "type": "string" },
+                                          "cost_center_name": { "type": "string" },
+                                          "cost_center_code": { "type": "string" }
+                                      },
+                                      "additionalProperties": true
+                                  }
+                              ]
+                          }
+                      },
+                      "additionalProperties": true
+                  }
+              }
+          },
+          "additionalProperties": false
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

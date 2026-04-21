@@ -1,0 +1,85 @@
+meta {
+  name: BasicRequisitionDetails
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/BasicRequisitionDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Schema Validation", function () {
+  //     pm.response.to.have.jsonSchema({
+          type: "object",
+          required: ["status", "message", "data"],
+          properties: {
+              status: { type: "integer" },
+              message: { type: "string" },
+              data: {
+                  type: "object",
+                  required: ["companies", "show_company", "show_hiring_manager", "hiring_manager", "get_department_data"],
+                  properties: {
+                      companies: {
+                          type: "object",
+                          additionalProperties: { type: "string" } // dynamic keys with string values
+                      },
+                      show_company: { type: "boolean" },
+                      show_hiring_manager: { type: "boolean" },
+                      hiring_manager: {
+                          type: "object",
+                          required: ["name", "userid", "mongoid"],
+                          properties: {
+                              name: { type: "string" },
+                              userid: { type: "string" },
+                              mongoid: { type: "string" }
+                          }
+                      },
+                      get_department_data: { type: "boolean" }
+                  }
+              }
+          }
+      });
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

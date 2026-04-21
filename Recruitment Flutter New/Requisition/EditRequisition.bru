@@ -1,0 +1,187 @@
+meta {
+  name: EditRequisition
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/EditRequisition
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"requisition_id":"a6850776a70892","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Requisition Response Schema is valid", function () {
+      const schema = {
+          "type": "object",
+          "required": ["status", "message", "data"],
+          "properties": {
+              "status": { "type": "integer" },
+              "message": { "type": "string",enum:["Successfully loaded Requisition Data."] },
+              "data": {
+                  "type": "object",
+                  "required": ["basic_details", "job_details", "position_selection", "position_details", "other_details"],
+                  "properties": {
+                      "basic_details": {
+                          "type": "object",
+                          "required": ["company_id", "designation", "department_id", "requisition_id", "company_name"],
+                          "properties": {
+                              "company_id": { "type": "string" },
+                              "designation": { "type": "string" },
+                              "department_id": { "type": "string" },
+                              "restricted_loc": { "type": "string" },
+                              "functional_area": { "type": "string" },
+                              "business_unit_id": { "type": "string" },
+                              "raised_on_behalfof": { "type": "string" },
+                              "band": { "type": "string" },
+                              "grade": { "type": "string" },
+                              "requisition_id": { "type": "string" },
+                              "company_name": { "type": "string" },
+                              "bu_name": { "type": "string" },
+                              "department_name": { "type": "string" },
+                              "designation_name": { "type": "string" },
+                              "project_id": { "type": "string" },
+                              "project_name": { "type": "string" },
+                              "fun_area_name": { "type": "string" },
+                              "rest_location_name": { "type": "string" },
+                              "hiring_manager": { "type": "string" },
+                              "hiring_manager_name": { "type": "string" }
+                          }
+                      },
+                      "job_details": {
+                          "type": "object",
+                          "required": ["experience_from", "experience_to", "salary_currency", "hiring_leads"],
+                          "properties": {
+                              "experience_from": { "type": "string" },
+                              "experience_to": { "type": "string" },
+                              "experience_yrs_month": { "type": "string" },
+                              "experience_range": { "type": "string" },
+                              "salary_currency": { "type": "string" },
+                              "salary_min": { "type": "string" },
+                              "salary_max": { "type": "string" },
+                              "salary_range": { "type": "string" },
+                              "salary_timeframe": { "type": "string" },
+                              "recruitment_start_date": { "type": "string" },
+                              "hiring_lead_of_requisition": { "type": "string" },
+                              "hiring_leads": { "type": "object" },
+                              "key_skills": { "type": "string" },
+                              "additional_roles_responsibilities": { "type": "string" },
+                              "show_exp_range": { "type": "boolean" },
+                              "mandatory_exp_range": { "type": "boolean" },
+                              "show_salary_range": { "type": "boolean" },
+                              "mandatory_salary_range": { "type": "boolean" },
+                              "show_rec_start_date": { "type": "boolean" },
+                              "mandatory_rec_start_date": { "type": "boolean" },
+                              "show_hiring_lead": { "type": "boolean" },
+                              "mandatory_hiring_lead": { "type": "boolean" },
+                              "show_requested_job_tat": { "type": "boolean" },
+                              "mandatory_requested_job_tat": { "type": "boolean" },
+                              "job_description": { "type": "string" },
+                              "currency_array": { "type": "object" }
+                          }
+                      },
+                      "position_selection": {
+                          "type": "array",
+                          "items": { "type": "object" }
+                      },
+                      "position_details": {
+                          "type": "object",
+                          "required": ["default_functional_area", "functional_area_arr", "employee_typ_arr"],
+                          "properties": {
+                              "default_location": { "type": "string" },
+                              "default_functional_area": { "type": "string" },
+                              "functional_area_arr": { "type": "object" },
+                              "assignment_one_arr": { "type": "object" },
+                              "assignment_two_arr": { "type": "object" },
+                              "assignment_three_arr": { "type": "object" },
+                              "contribution_level_arr": { "type": "object" },
+                              "designation_titles_arr": { "type": "object" },
+                              "job_levels_arr": { "type": "object" },
+                              "location_arr": { "type": "object" },
+                              "employee_typ_arr": { "type": "object" },
+                              "position_data": { "type": "array" },
+                              "position_ids_arr": { "type": "array" },
+                              "is_position_based": { "type": "boolean" }
+                          }
+                      },
+                      "other_details": {
+                          "type": "object",
+                          "required": ["custom_fields", "show_comments", "mandatory_comments"],
+                          "properties": {
+                              "comments": { "type": "string" },
+                              "asset_requirements": { "type": "string" },
+                              "custom_fields": { "type": "array" },
+                              "show_comments": { "type": "boolean" },
+                              "mandatory_comments": { "type": "boolean" },
+                              "show_requisition_asset": { "type": "boolean" },
+                              "mandatory_requisition_asset": { "type": "boolean" },
+                              "separate_req_new_replacement": { "type": "boolean" }
+                          }
+                      },
+                      "initiator_form": { "type": "array" },
+                      "approval_flow": { "type": "array" },
+                      "initiator_form_new": { "type": "array" },
+                      "is_req_creation_completed": { "type": "boolean" },
+                      "is_editable": { "type": "boolean" },
+                      "is_rejected": { "type": "boolean" },
+                      "rejected_reason": { "type": "string" },
+                      "job_name": { "type": "string" },
+                      "status": { "type": "integer" },
+                      "settings": { "type": "object" },
+                      "task_id": { "type": "string" },
+                      "custom_flow_id": { "type": "string" },
+                      "approval_flow_set_id": { "type": "string" },
+                      "category": { "type": "string" },
+                      "show_act_button": { "type": "boolean" },
+                      "is_job_details_edit_allowed": { "type": "boolean" },
+                      "is_position_edit_allowed": { "type": "boolean" },
+                      "is_others_details_edit_allowed": { "type": "boolean" },
+                      "type_of_position": { "type": "string" },
+                      "is_old_form": { "type": "boolean" }
+                  }
+              }
+          },
+          "additionalProperties": false
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

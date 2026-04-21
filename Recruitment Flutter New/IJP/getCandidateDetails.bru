@@ -1,0 +1,125 @@
+meta {
+  name: getCandidateDetails
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getCandidateDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"type":"ijp","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  const responseJson = res.getBody();
+  
+  const schema = {
+    type: "object",
+    required: ["show_referral_status_to_emp", "status", "candidates", "message"],
+    additionalProperties: false,
+    properties: {
+      show_referral_status_to_emp: { type: "string" },
+      status: { type: "number" },
+      candidates: {
+        type: "array",
+        items: {
+          type: "object",
+          required: [
+            "id",
+            "candidate_id",
+            "candidate_name",
+            "candidate_email",
+            "candidate_phone",
+            "candidate_status",
+            "job_title",
+            "job_code",
+            "location",
+            "applied_date",
+            "applied_date_timezone",
+            "withdrawn_date"
+          ],
+          additionalProperties: false,
+          properties: {
+            id: { type: "string" },
+            candidate_id: { type: "string" },
+            candidate_name: { type: "string" },
+            candidate_email: { type: "string", format: "email" },
+            candidate_phone: { type: "string" },
+            candidate_status: { type: "string" },
+            job_title: { type: "string" },
+            job_code: { type: "string" },
+            location: { type: "string" },
+            applied_date: { type: "string" },
+            applied_date_timezone: {
+              type: "object",
+              required: ["date", "time", "epoch"],
+              additionalProperties: false,
+              properties: {
+                date: { type: "string" },
+                time: { type: "string" },
+                epoch: { type: "number" }
+              }
+            },
+            withdrawn_date: {
+      type: ["object", "array", "null"],
+      additionalProperties: false,
+              properties: {
+                date: { type: "string" },
+                time: { type: "string" },
+                epoch: { type: "number" }
+              }
+    }
+          }
+        }
+      },
+      message: { type: "string", "enum":["Successfully loaded"] }
+    }
+  };
+  
+  // Validate schema with Postman built-in tv4
+  const valid = tv4.validate(responseJson, schema);
+  if (!valid) {
+    console.error("Schema validation errors:", tv4.error);
+  }
+  test("Response schema is valid", () => {
+    expect(valid, JSON.stringify(tv4.error)).to.be.true;
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

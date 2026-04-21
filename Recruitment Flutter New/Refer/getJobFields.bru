@@ -1,0 +1,142 @@
+meta {
+  name: getJobFields
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getJobFields
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"id":"a64240c3ed2000","type":"refer","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "500",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema validation for Job Fields Response", function () {
+      const schema = {
+          type: "object",
+          required: ["status", "message", "data"],
+          properties: {
+              status: { type: "integer" },
+              message: { type: "string", enum:["Successfully loaded all the job fields"] },
+              data: {
+                  type: "object",
+                  required: [
+                      "is_parser_enable",
+                      "job_fields",
+                      "ijp_take_consent",
+                      "ijp_consent_text",
+                      "ijp_privacy_policy_display_name",
+                      "ijp_privacy_policy_link",
+                      "ijp_privacy_statement",
+                      "ijp_prefilled_data",
+                      "disable_cand_from_multi_work_and_education",
+                      "disable_cand_to_mand_check_is_highest_qualification"
+                  ],
+                  properties: {
+                      is_parser_enable: { type: "boolean" },
+                      job_fields: {
+                          type: "array",
+                          items: {
+                              type: "object",
+                              required: ["fields", "label", "order", "type", "id"],
+                              properties: {
+                                  label: { type: "string" },
+                                  order: { type: ["integer", "string"] },
+                                  type: { type: "string" },
+                                  id: { type: "string" },
+                                  fields: {
+                                      type: "array",
+                                      items: {
+                                          type: "object",
+                                          required: ["order", "label", "validation", "type", "class", "id"],
+                                          properties: {
+                                              order: { type: ["integer", "string"] },
+                                              label: { type: "string" },
+                                              type: { type: "string" },
+                                              class: { type: "string" },
+                                              id: { type: "string" },
+                                              validation: {
+                                                  type: "object",
+                                                  properties: {
+                                                      mandatory: { type: "boolean" },
+                                                      regex: { type: "string" },
+                                                      message: { type: "string" },
+                                                      max_file_size: { type: ["integer", "null"] },
+                                                      valid_formats: { type: ["array", "null"] },
+                                                      valid_extentions: { type: ["array", "null"] }
+                                                  }
+                                              },
+                                              is_calculation_active: { type: "boolean" },
+                                              rules: { type: ["boolean", "array"] },
+                                              has_dependency: { type: "boolean" },
+                                              dependent_keys: { type: "array" },
+                                              has_icon: { type: "boolean" },
+                                              hasDependentDropdown: { type: "boolean" },
+                                              dependentField: { type: "string" },
+                                              optionEndpoint: { type: "string" },
+                                              queryParam: { type: "array" },
+                                              is_numeric: { type: "boolean" },
+                                              is_custom: { type: "boolean" },
+                                              is_enabled: { type: "boolean" },
+                                              tooltip: { type: ["string", "boolean"] },
+                                              options: { type: ["array", "boolean"] }
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      },
+                      ijp_take_consent: { type: "boolean" },
+                      ijp_consent_text: { type: "string" },
+                      ijp_privacy_policy_display_name: { type: "string" },
+                      ijp_privacy_policy_link: { type: "string" },
+                      ijp_privacy_statement: { type: "string" },
+                      ijp_prefilled_data: { type: "string" },
+                      disable_cand_from_multi_work_and_education: { type: "boolean" },
+                      disable_cand_to_mand_check_is_highest_qualification: { type: "boolean" }
+                  }
+              }
+          }
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,85 @@
+meta {
+  name: LoadDeptDesignationData two
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/LoadDeptDesignationData
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"company_id":"a6374aa9f90fc3","hiring_manager":"","department_id":"a6374aba638498","get_designation":true,"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema validation for Designation List Response", function () {
+      const schema = {
+          type: "object",
+          required: ["status", "message", "data"],
+          properties: {
+              status: { 
+                  type: "integer",
+                  enum: [0, 1]  // restricts values
+              },
+              message: { 
+                  type: "string",
+                  enum: ["Successfully loaded data"]  // strict message check
+              },
+              data: {
+                  type: "object",
+                  required: ["status", "desig_list"],
+                  properties: {
+                      status: { 
+                          type: "string",
+                          enum: ["success", "failure"] 
+                      },
+                      desig_list: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                          // key = designation_id, value = designation_name
+                      }
+                  }
+              }
+          }
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

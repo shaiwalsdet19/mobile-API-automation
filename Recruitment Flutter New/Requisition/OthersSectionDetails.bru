@@ -1,0 +1,114 @@
+meta {
+  name: OthersSectionDetails
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/OthersSectionDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"hiring_manager":"","company_id":"a6374aa9f90fc3","designation_id":"a6424773077b2f","project_id":"","department_id":"a6374aba638498","business_unit_id":"a6374aaebbe439","functional_area_id":"","restricted_loc_id":"","experience_from":"0","experience_to":"1","experience_yrs_month":"Years","salary_currency":"INR","salary_min":"20","salary_max":"50","salary_timeframe":"Annual","recruitment_start_date":"","hiring_lead_of_requisition":"","additional_roles_responsibilities":"","key_skills":"","no_of_employees_new":1,"no_of_employees_replacement":0,"positions":1,"type_of_position":"","comments":"","asset_requirements":"","custom_flow_id":"","position_matrix":[{"position_number":1,"position_id":"","position_type":"new","designation_alias":"test","func_area":"","location":"a6374ae5f52470","contribution_level":"","emp_type":"","emp_sub_type":"","job_level":"","designation_title":"","assignment_one":"","assignment_two":"","assignment_three":"","rep_for":"","reporting_manager":"","hrbp":"","dotted_line_manager":"","standard_role1":"","standard_role2":"","standard_role3":""}],"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema Validation", function () {
+  //     pm.response.to.have.jsonSchema({
+          type: "object",
+          required: ["status", "message", "data"],
+          properties: {
+              status: { type: "integer" },
+              message: { type: "string",enum:["Successfully loaded data"] },
+              data: {
+                  type: "object",
+                  required: [
+                      "show_comments", "mandatory_comments",
+                      "show_requisition_asset", "mandatory_requisition_asset",
+                      "separate_req_new_replacement",
+                      "initiator_form", "initiator_form_new",
+                      "custom_fields", "custom_flow_id", "approval_flow"
+                  ],
+                  properties: {
+                      // boolean flags
+                      show_comments: { type: "boolean" },
+                      mandatory_comments: { type: "boolean" },
+                      show_requisition_asset: { type: "boolean" },
+                      mandatory_requisition_asset: { type: "boolean" },
+                      separate_req_new_replacement: { type: "boolean" },
+  
+                      // arrays
+                      initiator_form: { type: ["array", "object"] },
+                      initiator_form_new: { type: ["array", "object"] },
+  
+                      // custom_fields array
+                      custom_fields: {
+                          type: "array",
+                          items: {
+                              type: "object",
+                              required: ["type", "required", "options", "value", "disabled", "id", "label"],
+                              properties: {
+                                  type: { type: "string" },            // e.g. textarea, select, radio, textfield
+                                  required: { type: "string" },       // "0" or "1" (string)
+                                  options: {
+                                      type: "object",
+                                      additionalProperties: { type: "string" } // dynamic option values
+                                  },
+                                  value: {                            // can be string or array
+                                      oneOf: [
+                                          { type: "string" },
+                                          { type: "array", items: { type: "string" } }
+                                      ]
+                                  },
+                                  disabled: { type: "boolean" },
+                                  id: { type: "string" },
+                                  label: { type: "string" }
+                              }
+                          }
+                      },
+  
+                      // strings
+                      custom_flow_id: { type: "string" },
+                      approval_flow: { type: "string" }
+                  }
+              }
+          }
+      });
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

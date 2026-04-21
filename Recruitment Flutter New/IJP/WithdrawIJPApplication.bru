@@ -1,0 +1,283 @@
+meta {
+  name: WithdrawIJPApplication
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/WithdrawIJPApplication
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"id":"{{candidate_id}}","withdraw_reason":"tesy","token":"{{token}}"}
+  //{"id":"a68d4e8838680b","withdraw_reason":"tesy","token":"0b4bd093566d18484e672ac9d678800c"}
+}
+
+script:pre-request {
+  /*// First API Call: Login
+  // pm.sendRequest({
+  //     url: pm.environment.get("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      header: {
+          'Content-Type': 'application/json'
+      },
+      body: {
+          mode: 'raw',
+          raw: JSON.stringify({
+              "username": "501",
+              "password": "Mobile@12"
+          })
+      }
+  }, function (err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.json();
+  
+          // Store values in environment
+  //         pm.environment.set("token", json.token);
+  //         pm.environment.set("tenant_id", json.tenant_id);
+  //         pm.environment.set("user_id", json.user_id);
+      }
+  });
+  
+  // pm.sendRequest({
+  //             url: pm.environment.get("apiURL") + "/RecruitmentMobileapi/candidateJobSubmit",
+              method: 'POST',
+              header: {
+                  'Content-Type': 'application/json'
+              },
+              body: {
+                  mode: 'raw',
+                  raw: JSON.stringify({"data": {
+                  "resume_details": {},
+                  "biographical": {
+                      "firstname": "Ravi",
+                      "lastname": "Adam"
+                  },
+                  "work_experience": {
+                      "has_prev_work_exp": false,
+                      "0": {}
+                  },
+                  "contact": {
+                      "additional_email_onb": "ravi2@darwindummy.com",
+                      "phone_country_code": {
+                          "label": "+91 India",
+                          "value": "+91"
+                      },
+                      "phone": "1234567890"
+                  },
+                  "misc": {},
+                  "array_section_one": {
+                      "0": {}
+                  }
+              },
+              "type": "ijp",
+              "job_id": "a64240c3ed2000",
+  //             "token": pm.environment.get("token")})
+              }
+  }, function (err3, res3) {
+              if (err3) {
+                  console.log("Candidate Submit API failed:", err3);
+                  return;
+              }
+              console.log("Candidate Submit response:", res3.json());
+  });
+  
+  // Second API Call: Get Candidate Details
+  // pm.sendRequest({
+  //     url: pm.environment.get("apiURL") + "/RecruitmentMobileapi/getCandidateDetails",
+      method: 'POST',
+      header: {
+          'Content-Type': 'application/json'
+      },
+      body: {
+          mode: 'raw',
+          raw: JSON.stringify({
+              "type": "ijp",
+  //             "token": pm.environment.get("token")
+          })
+      }
+  }, function (err, res) {
+      if (err) {
+          console.log("Get Candidate Details API failed:", err);
+      } else {
+          let json = res.json();
+  
+          // Function to get today's date in "DD-MM-YYYY"
+          function getTodayDate() {
+              const today = new Date();
+              const dd = String(today.getDate()).padStart(2, '0');
+              const mm = String(today.getMonth() + 1).padStart(2, '0');
+              const yyyy = today.getFullYear();
+              return `${dd}-${mm}-${yyyy}`;
+          }
+  
+          const todayDate = getTodayDate();
+  
+          // Find first candidate with today's date and status = "Process Ongoing"
+          let todayCandidate = json.candidates.find(c => 
+              c.applied_date === todayDate && 
+              c.candidate_status === "Shortlisting"
+          );
+  
+          if (todayCandidate) {
+  //             pm.environment.set("candidate_id", todayCandidate.id);
+              console.log("Today's Candidate ID with status 'Shortlisting':", todayCandidate.id);
+          } else {
+              console.warn("No candidate found with today's date and status 'Shortlisting':", todayDate);
+  //             pm.environment.unset("candidate_id_today");
+          }
+      }
+  });
+  */
+  // First API Call: Login
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+          return;
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+  
+          // === Candidate Submit Request (fires only after login completes) ===
+          await bru.sendRequest({
+              url: bru.getEnvVar("apiURL") + "/RecruitmentMobileapi/candidateJobSubmit",
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              data: JSON.stringify({
+                  "data": {
+                      "resume_details": {},
+                      "biographical": {
+                          "firstname": "Ravi",
+                          "lastname": "Adam"
+                      },
+                      "work_experience": {
+                          "has_prev_work_exp": false,
+                          "0": {}
+                      },
+                      "contact": {
+                          "additional_email_onb": "ravi2@darwindummy.com",
+                          "phone_country_code": {
+                              "label": "+91 India",
+                              "value": "+91"
+                          },
+                          "phone": "1234567890"
+                      },
+                      "misc": {},
+                      "array_section_one": {
+                          "0": {}
+                      }
+                  },
+                  "type": "ijp",
+                  "job_id": "a64240c3ed2000",
+  //                 "token": json.token//pm.environment.get("token")
+              })
+          }, async function(err3, res3) {
+              if (err3) {
+                  console.log("Candidate Submit API failed:", err3);
+                  return;
+              }
+              console.log("Candidate Submit response:", res3.data);
+  
+              // === Get Candidate Details (fires only after candidate submit completes) ===
+              await bru.sendRequest({
+                  url: bru.getEnvVar("apiURL") + "/RecruitmentMobileapi/getCandidateDetails",
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  data: JSON.stringify({
+                      "type": "ijp",
+  //                     "token": json.token//pm.environment.get("token")
+                  })
+              }, async function(err4, res4) {
+                  if (err4) {
+                      console.log("Get Candidate Details API failed:", err4);
+                      return;
+                  }
+  
+                  let json4 = res4.data;
+  
+                  // Function to get today's date in "DD-MM-YYYY"
+                  function getTodayDate() {
+                      const today = new Date();
+                      const dd = String(today.getDate()).padStart(2, '0');
+                      const mm = String(today.getMonth() + 1).padStart(2, '0');
+                      const yyyy = today.getFullYear();
+                      return `${dd}-${mm}-${yyyy}`;
+                  }
+  
+                  const todayDate = getTodayDate();
+  
+                  // Find first candidate with today's date and status = "Shortlisting"
+                  let todayCandidate = json4.candidates.find(c => 
+                      c.applied_date === todayDate && 
+                      c.candidate_status === "Shortlisting"
+                  );
+  
+                  if (todayCandidate) {
+                      bru.setEnvVar("candidate_id", todayCandidate.id);
+                      console.log("Today's Candidate ID with status 'Shortlisting':", todayCandidate.id);
+                  } else {
+                      console.warn("No candidate found with today's date and status 'Shortlisting':", todayDate);
+                      bru.deleteEnvVar("candidate_id_today");
+                  }
+              }); // end getCandidateDetails
+          }); // end candidateJobSubmit
+      } // end else login success
+  }); // end login
+  
+}
+
+script:post-response {
+  // Check for status code 200
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Schema validation with message", function () {
+      const schema = {
+          type: "object",
+          required: ["status", "message"],
+          properties: {
+              status: { 
+                  type: "integer",
+                  enum: [0, 1]   // only 0 or 1 allowed
+              },
+              message: { 
+                  type: "string",
+                  enum: ["Your application has been successfully withdrawn"] 
+                  // only this exact message allowed
+              }
+          }
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+  
+  
+}
+
+settings {
+  encodeUrl: true
+}

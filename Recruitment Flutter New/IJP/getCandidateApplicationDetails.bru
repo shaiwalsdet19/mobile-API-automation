@@ -1,0 +1,229 @@
+meta {
+  name: getCandidateApplicationDetails
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getCandidateApplicationDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"id":"a685e220a8833b","type":"ijp","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema is valid", () => {
+      const schema = {
+          "type": "object",
+          "required": ["status", "data", "message"],
+          "properties": {
+              "status": { "type": "integer" },
+              "message": { "type": "string", "enum":["Successfully loaded candidate details"] },
+              "data": {
+                  "type": "object",
+                  "required": ["candidate_details", "job_details", "has_workexperience", "show_withdraw_button", "resume"],
+                  "properties": {
+                      "candidate_details": {
+                          "type": "array",
+                          "items": {
+                              "type": "object",
+                              "required": ["id", "label", "is_array", "fields", "array_fields"],
+                              "properties": {
+                                  "id": { "type": "string" },
+                                  "label": { "type": "string" },
+                                  "is_array": { "type": "boolean" },
+                                  "fields": {
+                                      "type": "array",
+                                      "items": {
+                                          "type": "object",
+                                          "required": [
+                                              "id",
+                                              "label",
+                                              "type",
+                                              "bool_value",
+                                              "attachment_value",
+                                              "attachment_array_value",
+                                              "string_value"
+                                          ],
+                                          "properties": {
+                                              "id": { "type": "string" },
+                                              "label": { "type": "string" },
+                                              "type": { "type": "string" },
+                                              "bool_value": { "type": "boolean" },
+                                              "attachment_value": {
+                                                  "oneOf": [
+                                                      { "type": "array" },
+                                                      {
+                                                          "type": "object",
+                                                          "properties": {
+                                                              "s3_url": { "type": ["string", "null"] },
+                                                              "filename": { "type": "string" }
+                                                          },
+                                                          "required": ["s3_url", "filename"]
+                                                      }
+                                                  ]
+                                              },
+                                              "attachment_array_value": { "type": "array" },
+                                              "string_value": { "type": "string" }
+                                          }
+                                      }
+                                  },
+                                  "array_fields": {
+                                      "type": "array",
+                                      "items": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "object",
+                                              "required": [
+                                                  "id",
+                                                  "label",
+                                                  "type",
+                                                  "bool_value",
+                                                  "attachment_value",
+                                                  "attachment_array_value",
+                                                  "string_value"
+                                              ],
+                                              "properties": {
+                                                  "id": { "type": "string" },
+                                                  "label": { "type": "string" },
+                                                  "type": { "type": "string" },
+                                                  "bool_value": { "type": "boolean" },
+                                                  "attachment_value": {
+                                                      "oneOf": [
+                                                          { "type": "array" },
+                                                          {
+                                                              "type": "object",
+                                                              "properties": {
+                                                                  "s3_url": { "type": ["string", "null"] },
+                                                                  "filename": { "type": "string" }
+                                                              },
+                                                              "required": ["s3_url", "filename"]
+                                                          }
+                                                      ]
+                                                  },
+                                                  "attachment_array_value": { "type": "array" },
+                                                  "string_value": { "type": "string" }
+                                              }
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      },
+                      "job_details": {
+                          "type": "object",
+                          "required": [
+                              "job_id",
+                              "job_code",
+                              "role",
+                              "department",
+                              "location",
+                              "employee_type",
+                              "employee_sub_type",
+                              "exp_min_range",
+                              "exp_max_range",
+                              "created_on",
+                              "created_on_timezone",
+                              "experience",
+                              "salary"
+                          ],
+                          "properties": {
+                              "job_id": { "type": "string" },
+                              "job_code": { "type": "string" },
+                              "role": { "type": "string" },
+                              "department": {
+                                  "type": "object",
+                                  "required": [
+                                      "department_name",
+                                      "department_code",
+                                      "cost_center_id",
+                                      "business_unit_id",
+                                      "business_unit",
+                                      "business_unit_code",
+                                      "division_cost_center",
+                                      "division_cost_center_code",
+                                      "division_cost_center_name",
+                                      "division_code",
+                                      "division"
+                                  ],
+                                  "properties": {
+                                      "department_name": { "type": "string" },
+                                      "department_code": { "type": "string" },
+                                      "cost_center_id": { "type": "string" },
+                                      "business_unit_id": { "type": "string" },
+                                      "business_unit": { "type": "string" },
+                                      "business_unit_code": { "type": "string" },
+                                      "division_cost_center": { "type": "string" },
+                                      "division_cost_center_code": { "type": "string" },
+                                      "division_cost_center_name": { "type": "string" },
+                                      "division_code": { "type": "string" },
+                                      "division": { "type": "string" }
+                                  }
+                              },
+                              "location": { "type": "string" },
+                              "employee_type": { "type": "string" },
+                              "employee_sub_type": { "type": "string" },
+                              "exp_min_range": { "type": "integer" },
+                              "exp_max_range": { "type": "integer" },
+                              "created_on": { "type": "string" },
+                              "created_on_timezone": {
+                                  "type": "object",
+                                  "required": ["date", "time", "epoch"],
+                                  "properties": {
+                                      "date": { "type": "string" },
+                                      "time": { "type": "string" },
+                                      "epoch": { "type": "integer" }
+                                  }
+                              },
+                              "experience": { "type": "string" },
+                              "salary": { "type": "string" }
+                          }
+                      },
+                      "has_workexperience": { "type": "boolean" },
+                      "show_withdraw_button": { "type": "boolean" },
+                      "resume": { "type": ["null", "object"] }
+                  }
+              }
+          }
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

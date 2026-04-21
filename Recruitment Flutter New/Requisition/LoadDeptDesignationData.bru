@@ -1,0 +1,95 @@
+meta {
+  name: LoadDeptDesignationData
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/LoadDeptDesignationData
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"company_id":"a6374aa9f90fc3","hiring_manager":"","get_department":true,"token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema validation for Department-BU Mapping Response", function () {
+      const schema = {
+          type: "object",
+          required: ["status", "message", "data"],
+          properties: {
+              status: { 
+                  type: "integer",
+                  enum: [0, 1] 
+              },
+              message: { type: "string",enum:["Successfully loaded data"] },
+              data: {
+                  type: "object",
+                  required: ["status", "dept_list", "bu_list", "dept_bu_mapping"],
+                  properties: {
+                      status: { 
+                          type: "string",
+                          enum: ["success", "failure"] 
+                      },
+                      dept_list: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                          // keys = dept IDs, values = dept names
+                      },
+                      bu_list: {
+                          type: "object",
+                          additionalProperties: { type: "string" }
+                          // keys = BU IDs, values = BU names
+                      },
+                      dept_bu_mapping: {
+                          type: "object",
+                          additionalProperties: {
+                              type: "object",
+                              additionalProperties: { type: "string" }
+                              // BU_ID -> { DEPT_ID: "Dept Name" }
+                          }
+                      }
+                  }
+              }
+          }
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

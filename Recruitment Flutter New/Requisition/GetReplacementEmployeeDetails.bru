@@ -1,0 +1,111 @@
+meta {
+  name: GetReplacementEmployeeDetails
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{apiURL}}/Mobileapi/GetReplacementEmployeeDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+   {"replacement_user_id":"37527","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "501",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  test("Schema is valid", function () {
+      const schema = {
+          "type": "object",
+          "required": ["status", "data"],
+          "properties": {
+              "status": { "type": "integer" },
+              "data": {
+                  "type": "object",
+                  "required": ["ijp_data", "current_data", "have_ijp_history"],
+                  "properties": {
+                      "ijp_data": {
+                          "type": "array"
+                      },
+                      "current_data": {
+                          "type": "object",
+                          "required": [
+                              "location", "manager", "emp_type", "emp_sub_type", "job_level",
+                              "designation_title", "hrbp", "dotted_line_manager", "designation_alias",
+                              "standard_role1", "standard_role2", "standard_role3", "assignment_one",
+                              "assignment_two", "assignment_three", "contribution_level",
+                              "manager_name", "hrbp_name", "dotted_line_manager_name",
+                              "standard_role1_name", "standard_role2_name", "standard_role3_name"
+                          ],
+                          "properties": {
+                              "location": { "type": "string" },
+                              "manager": { "type": "string" },
+                              "emp_type": { "type": "string" },
+                              "emp_sub_type": { "type": "string" },
+                              "job_level": { "type": "string" },
+                              "designation_title": { "type": "string" },
+                              "hrbp": { "type": "string" },
+                              "dotted_line_manager": { "type": "string" },
+                              "designation_alias": { "type": "string" },
+                              "standard_role1": { "type": "string" },
+                              "standard_role2": { "type": "string" },
+                              "standard_role3": { "type": "string" },
+                              "assignment_one": { "type": "string" },
+                              "assignment_two": { "type": "string" },
+                              "assignment_three": { "type": "string" },
+                              "contribution_level": { "type": "string" },
+                              "manager_name": { "type": "string" },
+                              "hrbp_name": { "type": "string" },
+                              "dotted_line_manager_name": { "type": "string" },
+                              "standard_role1_name": { "type": "string" },
+                              "standard_role2_name": { "type": "string" },
+                              "standard_role3_name": { "type": "string" }
+                          },
+                          "additionalProperties": false
+                      },
+                      "have_ijp_history": { "type": "boolean" }
+                  },
+                  "additionalProperties": false
+              }
+          },
+          "additionalProperties": false
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}

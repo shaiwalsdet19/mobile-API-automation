@@ -1,0 +1,176 @@
+meta {
+  name: getJobDetails
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{apiURL}}/RecruitmentMobileapi/getJobDetails
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"job_id":"a64240c3ed2000","type":"ijp","token":"{{token}}"}
+}
+
+script:pre-request {
+  await bru.sendRequest({
+      url: bru.getEnvVar("apiURL") + "/Mobileapi/auth",
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+          "username": "500",
+          "password": "Mobile@12"
+      })
+  }, async function(err, res) {
+      if (err) {
+          console.log("Login API failed:", err);
+      } else {
+          let json = res.data;
+  
+          // Store values in environment
+          bru.setEnvVar("token", json.token);
+          bru.setEnvVar("tenant_id", json.tenant_id);
+          bru.setEnvVar("user_id", json.user_id);
+      }
+  });
+  
+}
+
+script:post-response {
+  test("Checking for status code 200", function () {
+      expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Schema is valid", () => {
+      const schema = {
+          type: "object",
+          required: ["status", "message", "job_details"],
+          properties: {
+              status: { type: "integer" },
+              message: { type: "string", "enum":["Successfully loaded Job Detail"] },
+              job_details: {
+                  type: "object",
+                  required: [
+                      "job_id",
+                      "job_code",
+                      "role",
+                      "department",
+                      "location",
+                      "employee_type",
+                      "employee_sub_type",
+                      "exp_min_range",
+                      "exp_max_range",
+                      "created_on",
+                      "created_on_timezone",
+                      "job_description",
+                      "leads",
+                      "additional_information",
+                      "salary",
+                      "salary_timeframe",
+                      "experience",
+                      "ijp_err",
+                      "error",
+                      "is_remote"
+                  ],
+                  properties: {
+                      job_id: { type: "string" },
+                      job_code: { type: "string" },
+                      role: { type: "string" },
+                      department: {
+                          type: "object",
+                          required: [
+                              "department_name",
+                              "department_code",
+                              "cost_center_id",
+                              "business_unit_id",
+                              "business_unit",
+                              "business_unit_code",
+                              "division_cost_center",
+                              "division_cost_center_code",
+                              "division_cost_center_name",
+                              "division_code",
+                              "division"
+                          ],
+                          properties: {
+                              department_name: { type: "string" },
+                              department_code: { type: "string" },
+                              cost_center_id: { type: "string" },
+                              business_unit_id: { type: "string" },
+                              business_unit: { type: "string" },
+                              business_unit_code: { type: "string" },
+                              division_cost_center: { type: "string" },
+                              division_cost_center_code: { type: "string" },
+                              division_cost_center_name: { type: "string" },
+                              division_code: { type: "string" },
+                              division: { type: "string" }
+                          }
+                      },
+                      location: { type: "string" },
+                      employee_type: { type: "string" },
+                      employee_sub_type: { type: "string" },
+                      exp_min_range: { type: "integer" },
+                      exp_max_range: { type: "integer" },
+                      created_on: { type: "string" },
+                      created_on_timezone: {
+                          type: "object",
+                          required: ["date", "time", "epoch"],
+                          properties: {
+                              date: { type: "string" },
+                              time: { type: "string" },
+                              epoch: { type: "integer" }
+                          }
+                      },
+                      job_description: { type: "string" },
+                      leads: {
+                          type: "array",
+                          items: {
+                              type: "object",
+                              required: [
+                                  "user_id",
+                                  "doj",
+                                  "url",
+                                  "name",
+                                  "name_employee_no",
+                                  "designation",
+                                  "department",
+                                  "image",
+                                  "is_on_notice"
+                              ],
+                              properties: {
+                                  user_id: { type: "string" },
+                                  doj: { type: "string" },
+                                  url: { type: "string" },
+                                  name: { type: "string" },
+                                  employee_no: { type: ["string", "null"] },
+                                  name_employee_no: { type: "string" },
+                                  designation: { type: "string" },
+                                  department: { type: "string" },
+                                  image: { type: "string" },
+                                  is_on_notice: { type: "string" }
+                              }
+                          }
+                      },
+                      additional_information: { type: "string" },
+                      salary: { type: "string" },
+                      salary_timeframe: { type: "string" },
+                      experience: { type: "string" },
+                      ijp_err: { type: "boolean" },
+                      error: { type: "string" },
+                      is_remote: { type: "integer" }
+                  }
+              }
+          }
+      };
+  
+  //     pm.response.to.have.jsonSchema(schema);
+  });
+  
+}
+
+settings {
+  encodeUrl: true
+}
